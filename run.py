@@ -15,6 +15,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.select import Select
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.service import Service
+from selenium.webdriver.firefox.options import Options
 import time
 import sys
 
@@ -23,6 +24,13 @@ try:
 except ImportError:
     import urllib2
 
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
 
 def construct_term_in(semester):
     # This is dark magic.
@@ -56,6 +64,7 @@ def get_remaining_seat(soup, cross_list):
 
 def refresh_course_website(driver, crn_arr, cross_list, term_in):
     remaining_seat = 0
+    refresh_counter = 0
     print("start refreshing ...")
     # keep refreshing until find empty space
     while True:
@@ -67,9 +76,11 @@ def refresh_course_website(driver, crn_arr, cross_list, term_in):
             soup = BeautifulSoup(driver.page_source, 'html.parser')
             remaining_seat = get_remaining_seat(soup, cross_list)
             if remaining_seat > 0:
-                print("refreshing done!")
+                print(f"{bcolors.OKGREEN}refreshing done!{bcolors.ENDC}")
                 return crn
-
+            refresh_counter += 1
+            print(f"\rRefresh attempt: {refresh_counter}", end="")
+            sys.stdout.flush()
 
 def register(driver, crn):
     # register single course
@@ -86,6 +97,7 @@ def log_in(username, password, driver):
     user_field.send_keys(username)
     password_field.send_keys(password)
     driver.find_element("name", "BTN_LOGIN").click()
+    print(f"{bcolors.OKGREEN}logged in{bcolors.ENDC}")
     return driver
 
 
@@ -111,6 +123,10 @@ def navigate(driver, username, password, crn):
 
 # ============================================ main ===================================
 
+options = Options()
+if '--headless' in sys.argv:        
+    options.add_argument('-headless')
+    sys.argv.remove('--headless')
 
 # put the crn numbers into the array
 crn_arr = []
@@ -120,7 +136,8 @@ if len(crn_arr) < 1:
     print("crn index error")
 
 # login url may change and might need update in the future
-login_url = 'https://login.uillinois.edu/auth/SystemLogin/sm_login.fcc?TYPE=33554433&REALMOID=06-a655cb7c-58d0-4028-b49f-79a4f5c6dd58&GUID=&SMAUTHREASON=0&METHOD=GET&SMAGENTNAME=-SM-dr9Cn7JnD4pZ%2fX9Y7a9FAQedR3gjL8aBVPXnJiLeXLOpk38WGJuo%2fOQRlFkbatU7C%2b9kHQgeqhK7gmsMW81KnMmzfZ3v0paM&TARGET=-SM-HTTPS%3a%2f%2fwebprod%2eadmin%2euillinois%2eedu%2fssa%2fservlet%2fSelfServiceLogin%3fappName%3dedu%2euillinois%2eaits%2eSelfServiceLogin%26dad%3dBANPROD1'
+# login_url = 'https://login.uillinois.edu/auth/SystemLogin/sm_login.fcc?TYPE=33554433&REALMOID=06-a655cb7c-58d0-4028-b49f-79a4f5c6dd58&GUID=&SMAUTHREASON=0&METHOD=GET&SMAGENTNAME=-SM-dr9Cn7JnD4pZ%2fX9Y7a9FAQedR3gjL8aBVPXnJiLeXLOpk38WGJuo%2fOQRlFkbatU7C%2b9kHQgeqhK7gmsMW81KnMmzfZ3v0paM&TARGET=-SM-HTTPS%3a%2f%2fwebprod%2eadmin%2euillinois%2eedu%2fssa%2fservlet%2fSelfServiceLogin%3fappName%3dedu%2euillinois%2eaits%2eSelfServiceLogin%26dad%3dBANPROD1'
+login_url = 'https://webprod.admin.uillinois.edu/ssa/servlet/SelfServiceLogin?appName=edu.uillinois.aits.SelfServiceLogin&dad=BANPROD1'
 
 # semester in this format: YYYY-spring/YYYY-summer/YYYY-fall
 semester = sys.argv[1]
@@ -135,8 +152,8 @@ start = time.time()
 term_in = construct_term_in(semester)
 
 while len(crn_arr) != 0:
-    # the driver for refresh
-    driver = webdriver.Firefox(service=Service(GeckoDriverManager().install()))
+    # the driver for refresh        
+    driver = webdriver.Firefox(options=options, service=Service(GeckoDriverManager().install()))
     driver = log_in(username, password, driver)
     crn_success = ""
     crn_success = refresh_course_website(driver, crn_arr, cross_list, term_in)
