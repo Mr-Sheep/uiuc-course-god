@@ -6,7 +6,7 @@
 # use semester in this format: YYYY-spring, YYYY-summer, YYYY-fall. Example: 2021-spring
 # note: do not log in into the system by yourself while using this program
 
-# required package: bs4, selenium, chromedriver
+# required package: bs4, selenium
 
 from bs4 import BeautifulSoup
 from selenium import webdriver
@@ -19,6 +19,7 @@ from selenium.webdriver.firefox.options import Options
 import time
 import sys
 import re
+import random
 
 try:
     import urllib.request as urllib2
@@ -72,7 +73,7 @@ def check_remaining_seats(driver, crn_arr, cross_list, term_in):
         remaining_seats.append(get_remaining_seat(soup, cross_list))
     return remaining_seats
 
-def refresh_course_website(driver, crn_groups, cross_list, term_in):
+def refresh_course_website(driver, crn_groups, cross_list, term_in, turbo):
     remaining_seat = 0
     refresh_counter = 0
     print("start refreshing ...")
@@ -90,7 +91,11 @@ def refresh_course_website(driver, crn_groups, cross_list, term_in):
         
             refresh_counter += 1
             print(f"\rRefresh attempt: {refresh_counter}", end="")
-            sys.stdout.flush()
+            sys.stdout.flush()  
+            if not turbo:          
+                sleep_time = random.uniform(30, 60)
+                time.sleep(sleep_time)
+            
 
 def register(driver, crns):
     # register single course
@@ -141,6 +146,11 @@ options = Options()
 if '--headless' in sys.argv:        
     options.add_argument('-headless')
     sys.argv.remove('--headless')
+    
+turbo = False;
+if '--turbo' in sys.argv:
+    turbo = True;
+    sys.argv.remove('--turbo')
 
 # put the crn numbers into the array
 crn_pattern = re.compile(r'{(.+?)}')
@@ -174,7 +184,7 @@ while len(crn_groups) != 0:
     driver = webdriver.Firefox(options=options, service=Service(GeckoDriverManager().install()))
     driver = log_in(username, password, driver)
     crn_success = ""
-    crn_success = refresh_course_website(driver, crn_groups, cross_list, term_in)
+    crn_success = refresh_course_website(driver, crn_groups, cross_list, term_in, turbo)
 
     # if empty seat found. the driver for register
     navigate(driver, username, password, crn_success)

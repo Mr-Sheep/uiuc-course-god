@@ -45,7 +45,16 @@ Compatible with Python2 and Python3
 
 2. Open a terminal and navigate to the folder containing the script.
 
-3. Run the script using the following command: `python run.py <semester> <netid> <password> <crn1> <crn2> ...`
+3. Run the script using the following command:
+
+```bash
+python run.py <semester> <netid> <password> <crn1> <crn2> ...
+```
+
+Options:
+
+- `--turbo`: no sleeping time between checks
+- `--headless`: Runs Firefox in headless mode
 
 Replace `<semester>` with the desired semester in this format: `YYYY-spring`, `YYYY-summer`, or `YYYY-fall`. For example: `2023-spring`.
 
@@ -53,7 +62,11 @@ Replace `<netid>` and `<password>` with your UIUC NetID and plaintext password.
 
 Replace `<crn1>`, `<crn2>`, and so on with the desired course CRNs.
 
-To group CRNs together, wrap them in `{}`. For example, to group CRNs 11451 and 41919, use the following syntax: `python run.py 2023-spring netid password {11451 41919} 34567`
+To group CRNs together, wrap them in `{}`. For example, to group CRNs 11451 and 41919, use the following syntax:
+
+```bash
+python run.py 2023-spring mynetid mypassword {11451 41919} 34567
+```
 
 ## Important Notes
 
