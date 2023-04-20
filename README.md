@@ -52,4 +52,4 @@ Wechat: chitianhao
 
 ## License
 
-License under MIT.
+Licensed under MIT.
