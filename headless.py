@@ -15,6 +15,8 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.select import Select
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.service import Service
+from selenium.webdriver.firefox.options import Options
+
 import time
 import sys
 
@@ -136,7 +138,9 @@ term_in = construct_term_in(semester)
 
 while len(crn_arr) != 0:
     # the driver for refresh
-    driver = webdriver.Firefox(service=Service(GeckoDriverManager().install()))
+    options = Options()
+    options.add_argument('-headless')
+    driver = webdriver.Firefox(options=options, service=Service(GeckoDriverManager().install()))
     driver = log_in(username, password, driver)
     crn_success = ""
     crn_success = refresh_course_website(driver, crn_arr, cross_list, term_in)
