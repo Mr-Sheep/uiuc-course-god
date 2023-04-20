@@ -18,6 +18,7 @@ from selenium.webdriver.firefox.service import Service
 from selenium.webdriver.firefox.options import Options
 import time
 import sys
+import re
 
 try:
     import urllib.request as urllib2
@@ -61,34 +62,47 @@ def get_remaining_seat(soup, cross_list):
             1].find_next_siblings('td')[2].string
     return int(remaining_seat)
 
+def check_remaining_seats(driver, crn_arr, cross_list, term_in):
+    remaining_seats = []
+    for crn in crn_arr:
+        url = 'https://ui2web1.apps.uillinois.edu/BANPROD1/bwckschd.p_disp_detail_sched?term_in=%d&crn_in=%s' % (
+            term_in, crn)
+        driver.get(url)
+        soup = BeautifulSoup(driver.page_source, 'html.parser')
+        remaining_seats.append(get_remaining_seat(soup, cross_list))
+    return remaining_seats
 
-def refresh_course_website(driver, crn_arr, cross_list, term_in):
+def refresh_course_website(driver, crn_groups, cross_list, term_in):
     remaining_seat = 0
     refresh_counter = 0
     print("start refreshing ...")
     # keep refreshing until find empty space
     while True:
-        for crn in crn_arr:
-            # this link needs to be updated each semester!
-            url = 'https://ui2web1.apps.uillinois.edu/BANPROD1/bwckschd.p_disp_detail_sched?term_in=%d&crn_in=%s' % (
-                term_in, crn)
-            driver.get(url)
-            soup = BeautifulSoup(driver.page_source, 'html.parser')
-            remaining_seat = get_remaining_seat(soup, cross_list)
-            if remaining_seat > 0:
+        for crn_group in crn_groups:
+            remaining_seats = check_remaining_seats(driver, crn_group, cross_list, term_in)
+            available_crns = [crn for crn, seats in zip(crn_group, remaining_seats) if seats > 0]
+            
+            if len(available_crns) == len(crn_group):
                 print(f"{bcolors.OKGREEN}refreshing done!{bcolors.ENDC}")
-                return crn
+                return available_crns
+            else:
+                available_crns = []
+        
             refresh_counter += 1
             print(f"\rRefresh attempt: {refresh_counter}", end="")
             sys.stdout.flush()
 
-def register(driver, crn):
+def register(driver, crns):
     # register single course
-    crn_blank = driver.find_element(By.ID, "crn_id1")
-    crn_blank.send_keys(crn)
+    count = 1;
+    for crn in crns:
+        crn_id = "crn_id" + str(count)
+        crn_blank = driver.find_element(By.ID, crn_id)
+        crn_blank.send_keys(crn)
+        count+=1
     driver.find_element(By.XPATH, "//input[@value='Submit Changes']").click()
     driver.save_screenshot('screen.png')
-
+        
 
 def log_in(username, password, driver):
     driver.get(login_url)
@@ -129,11 +143,15 @@ if '--headless' in sys.argv:
     sys.argv.remove('--headless')
 
 # put the crn numbers into the array
-crn_arr = []
-for i in range(4, len(sys.argv)):
-    crn_arr.append(sys.argv[i])
-if len(crn_arr) < 1:
-    print("crn index error")
+crn_pattern = re.compile(r'{(.+?)}')
+crn_groups = crn_pattern.findall(' '.join(sys.argv[4:]))
+grouped_crns = [crn.split() for crn in crn_groups]
+
+single_crns = [[crn] for crn in sys.argv[4:] if not crn.startswith('{') and not crn.endswith('}')]
+
+crn_groups = grouped_crns + single_crns
+print(crn_groups)
+# crn_arr = grouped_crns + single_crns
 
 # login url may change and might need update in the future
 # login_url = 'https://login.uillinois.edu/auth/SystemLogin/sm_login.fcc?TYPE=33554433&REALMOID=06-a655cb7c-58d0-4028-b49f-79a4f5c6dd58&GUID=&SMAUTHREASON=0&METHOD=GET&SMAGENTNAME=-SM-dr9Cn7JnD4pZ%2fX9Y7a9FAQedR3gjL8aBVPXnJiLeXLOpk38WGJuo%2fOQRlFkbatU7C%2b9kHQgeqhK7gmsMW81KnMmzfZ3v0paM&TARGET=-SM-HTTPS%3a%2f%2fwebprod%2eadmin%2euillinois%2eedu%2fssa%2fservlet%2fSelfServiceLogin%3fappName%3dedu%2euillinois%2eaits%2eSelfServiceLogin%26dad%3dBANPROD1'
@@ -151,12 +169,12 @@ start = time.time()
 
 term_in = construct_term_in(semester)
 
-while len(crn_arr) != 0:
+while len(crn_groups) != 0:
     # the driver for refresh        
     driver = webdriver.Firefox(options=options, service=Service(GeckoDriverManager().install()))
     driver = log_in(username, password, driver)
     crn_success = ""
-    crn_success = refresh_course_website(driver, crn_arr, cross_list, term_in)
+    crn_success = refresh_course_website(driver, crn_groups, cross_list, term_in)
 
     # if empty seat found. the driver for register
     navigate(driver, username, password, crn_success)
@@ -165,5 +183,5 @@ while len(crn_arr) != 0:
     msg = "time spent: %s" % (time.time() - start)
     print(msg)
     print("crn: " + str(crn_success) + " is done!!!!!!!!!!!!!!!!!")
-    crn_arr.remove(crn_success)
+    crn_groups.remove(crn_success)
     driver.quit()
