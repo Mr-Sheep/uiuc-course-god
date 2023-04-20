@@ -1,47 +1,12 @@
-# UIUC Course God
+# UIUC Course God 🌽
 
 ## Introduction
 
-Automatically check and register courses for UIUC students. This software is able to bypass
-school's auto-detection system.
+Automatically check and register courses for UIUC students. This software is able to bypass school's auto-detection system.
 
 You should be able to use this with your own school with some easy tweaks if they are using similar systems.
 
-## Warning
-
-This is a rule-breaking software, so please beware the risks.
-
-## Requirements
-
-Packages installation guide: `pip3 install -r requirement.txt`
-
-Compatible with Python2 and Python3
-
-Requirements: bs4, selenium, chromedriver (using brew cask), webdriver-manager
-
-## Usage and features
-
-`python3 run.py semester netid password {CRN1 CRN2} CRN3 CRN4 {CRN5 CRN6} ...`
-Optional: `--headless`
-
-if you put two or more crns inside a `{}` it will be considered as "linked course", meaning that all crns inside the bracket must be available for registration before the program register it.
-
-Use semester in this format: YYYY-season.
-
-Example usage: `python3 run.py 2021-fall abc123 abcdefg12345 11111 22222`
-
-Multiple courses can be put in at the same time.
-
-Crosslist courses are supported. However, you'll need to edit the code to do this.
-
-## Contributing
-
-If there is any outdated component, please make a pull request or contact the author.
-Contact me if you want to maintain this repo.
-
-Email: chitianhaoxp@gmail.com
-
-Wechat: chitianhao
+This script was originally written by [chitianhao](https://github.com/chitianhao/uiuc-course-god)
 
 ## Future features
 
@@ -49,6 +14,56 @@ Wechat: chitianhao
 - [] `argparse` or configuration file can be added. (currently the logic is straightforward so they are not involved)
 - [] Telegram bot support?
 - [x] Support of courses with lab/discussion section.
+
+## Warning
+
+This is a rule-breaking software, so please beware the risks.
+
+## Requirements
+
+The following Python packages are required:
+
+- bs4
+- selenium
+- chromedriver
+
+To install them, run: `pip3 install -r requirement.txt`
+
+or
+
+```
+pip3 install beautifulsoup4
+pip3 install selenium
+pip3 install webdriver-manager
+```
+
+Compatible with Python2 and Python3
+
+## Usage and features
+
+1. Clone or download the script to your local machine.
+
+2. Open a terminal and navigate to the folder containing the script.
+
+3. Run the script using the following command: `python run.py <semester> <netid> <password> <crn1> <crn2> ...`
+
+Replace `<semester>` with the desired semester in this format: `YYYY-spring`, `YYYY-summer`, or `YYYY-fall`. For example: `2023-spring`.
+
+Replace `<netid>` and `<password>` with your UIUC NetID and plaintext password.
+
+Replace `<crn1>`, `<crn2>`, and so on with the desired course CRNs.
+
+To group CRNs together, wrap them in `{}`. For example, to group CRNs 11451 and 41919, use the following syntax: `python run.py 2023-spring netid password {11451 41919} 34567`
+
+## Important Notes
+
+- Do not log in to the registration system yourself while using this script.
+- The login URL or other aspects of the script may need to be updated in the future. Be sure to check for updates if you encounter any issues.
+- Ensure that the semester format is correct, or the script will not work as intended.
+
+## Contributing
+
+If there is any outdated component, please make a pull request or contact the author.
 
 ## License
 
