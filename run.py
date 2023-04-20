@@ -90,12 +90,15 @@ def refresh_course_website(driver, crn_groups, cross_list, term_in, turbo):
                 available_crns = []
         
             refresh_counter += 1
-            print(f"\rRefresh attempt: {refresh_counter}", end="")
-            sys.stdout.flush()  
-            if not turbo:          
-                sleep_time = random.uniform(30, 60)
-                time.sleep(sleep_time)
-            
+            if not turbo:
+                sleep_time = int(random.uniform(30, 60))
+                for i in range(sleep_time, 0, -1):
+                    sys.stdout.write(f"\rRefresh attempt: {refresh_counter} | Next refresh in: {i}s")
+                    sys.stdout.flush()
+                    time.sleep(1)
+            else:
+                sys.stdout.write(f"\rRefresh attempt: {refresh_counter}")
+                sys.stdout.flush()
 
 def register(driver, crns):
     # register single course
@@ -160,7 +163,7 @@ grouped_crns = [crn.split() for crn in crn_groups]
 single_crns = [[crn] for crn in sys.argv[4:] if not crn.startswith('{') and not crn.endswith('}')]
 
 crn_groups = grouped_crns + single_crns
-print(crn_groups)
+print(f'working on: {crn_groups}')
 # crn_arr = grouped_crns + single_crns
 
 # login url may change and might need update in the future
